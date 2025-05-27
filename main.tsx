@@ -7,7 +7,7 @@ const load = async () => {
   const formdata = new FormData()
   formdata.append('file', new Blob([data], { type: 'application/octet-stream' }), 'example.txt')
 
-  const res = await xanfetch('http://localhost:5000/wp.zip', {
+  const res = await xanfetch('http://localhost:3000/api/as', {
     body: formdata,
     headers: {
     },
