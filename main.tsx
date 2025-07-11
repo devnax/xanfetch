@@ -7,17 +7,21 @@ const load = async () => {
   const formdata = new FormData()
   formdata.append('file', new Blob([data], { type: 'application/octet-stream' }), 'example.txt')
 
-  const res = await xanfetch('http://localhost:3000/api/as', {
+  const res: any = await xanfetch('http://localhost:3000/api/as', {
     body: formdata,
-    headers: {
-    },
-    onDownloadProgress(progress) {
-      console.log(progress);
+    responseType: 'json',
+    params: {
+      name: 'xanfetch',
+      age: 18,
     },
   });
-  const blob = await res.blob()
-  const buffer = await blob.arrayBuffer()
-  const text = new TextDecoder().decode(buffer);
+
+  console.log(res);
+
+  // const blob = await res.blob()
+  // const buffer = await blob.arrayBuffer()
+  // const text = new TextDecoder().decode(buffer);
+
 }
 
 const App = () => {

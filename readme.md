@@ -1,109 +1,87 @@
-# xanfetch
+# 📦 XanFetch - Advanced XMLHttpRequest Client
 
-**xanfetch** is a lightweight and flexible wrapper around `XMLHttpRequest`, designed for modern JavaScript and TypeScript applications. It provides a promise-based API with extended support for timeouts, progress tracking, abort signals, and credentials—making it ideal for precise control over HTTP requests.
+**XanFetch** is a lightweight, extensible HTTP client built on top of `XMLHttpRequest`, designed for modern web applications that need advanced features like:
 
----
-
-## 🚀 Features
-
-- ✅ All HTTP methods supported
-- ⏱ Timeout support
-- 📤 Upload progress tracking
-- 📥 Download progress tracking
-- ❌ Abortable requests via `AbortController`
-- 🔐 Credentials support (`withCredentials`)
-- 🔧 Fully typed with TypeScript
+* Query param injection
+* Automatic body serialization
+* Upload/download progress tracking
+* Response type control
+* Abort, timeout, and deduplication support
 
 ---
 
-## 📦 Installation
+## 🚀 Installation
 
 ```bash
 npm install xanfetch
 ```
 
-# 🛠 Usage
+Or copy the modular files into your own project structure.
+
+---
+
+## ✨ Features
+
+* ✅ Smart query parameter injection
+* ✅ Auto JSON stringification for body
+* ✅ Upload/Download progress handlers
+* ✅ Abort and timeout support
+* ✅ Deduplication for identical in-flight requests
+* ✅ Flexible `responseType`: `json`, `blob`, `text`, etc.
+
+---
+
+## 🛠 Usage
 
 ```ts
-import xanfetch from 'xanfetch';
+import xanFetch from 'xanfetch';
 
-const controller = new AbortController();
-
-xanfetch({
+const response = await xanFetch('https://api.example.com/data', {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ message: 'Hello World' }),
+  params: { userId: 123 },
+  body: { name: 'Naxrul' },
+  headers: { 'Authorization': 'Bearer token' },
+  responseType: 'json',
+  onProgress: (p) => console.log('Upload:', p),
+  onDownloadProgress: (p) => console.log('Download:', p),
   timeout: 5000,
-  onProgress: (progress) => console.log(`Upload: ${progress}%`),
-  onDownloadProgress: (progress) => console.log(`Download: ${progress}%`),
-  signal: controller.signal,
-  withCredentials: true,
-})
-  .then((response) => {
-    console.log('Response:', response);
-  })
-  .catch((error) => {
-    console.error('Request failed:', error);
-  });
+  deduplicate: true
+});
 
+console.log(response); // response data (JSON parsed)
 ```
 
+---
 
-# 📄 API
+## 🧩 API
 
-| Option               | Type                         | Description                                                                 |
-| -------------------- | ---------------------------- | --------------------------------------------------------------------------- |
-| `method`             | `string`                     | HTTP method (GET, POST, etc). Defaults to `"GET"`.                          |
-| `headers`            | `Record<string, string>`     | HTTP request headers.                                                       |
-| `body`               | `BodyInit \| null`           | Request body. Can be `FormData`, `Blob`, `string`, etc.                     |
-| `timeout`            | `number`                     | Request timeout in milliseconds.                                            |
-| `onProgress`         | `(progress: number) => void` | Callback for upload progress (0–100).                                       |
-| `onDownloadProgress` | `(progress: number) => void` | Callback for download progress (0–100).                                     |
-| `signal`             | `AbortSignal`                | Used to abort the request externally.                                       |
-| `withCredentials`    | `boolean`                    | Whether to include credentials (cookies, auth headers). Defaults to `false` |
+### xanFetch(url: string, options?: XanFetchOptions): Promise<any>
 
+### XanFetchOptions
 
-# ✅ Type Definitions
+| Option               | Type                                                                      | Description                                             |
+| -------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `method`             | `'GET' \| 'POST' \| 'PUT' \| 'DELETE' \| 'PATCH' \| 'HEAD'`               | HTTP method to use (default: `GET`)                     |
+| `headers`            | `Record<string, string>`                                                  | Optional request headers                                |
+| `body`               | `BodyInit \| object \| null \| undefined`                                 | Request body; plain objects are auto-serialized as JSON |
+| `timeout`            | `number`                                                                  | Timeout in milliseconds before aborting the request     |
+| `params`             | `Record<string, string \| number \| boolean \| null \| undefined>`        | Query parameters to append to the URL                   |
+| `onProgress`         | `(progress: number) => void`                                              | Upload progress callback (0-100)                        |
+| `onDownloadProgress` | `(progress: number) => void`                                              | Download progress callback (0-100)                      |
+| `signal`             | `AbortSignal`                                                             | Signal for request cancellation                         |
+| `withCredentials`    | `boolean`                                                                 | Whether to send cookies and auth headers                |
+| `responseType`       | `'response' \| 'json' \| 'text' \| 'blob' \| 'arrayBuffer' \| 'document'` | Determines how the response is parsed/returned          |
+| `deduplicate`        | `boolean`                                                                 | If true, cancels previous identical in-flight request   |
 
-```ts
-export type XanFetchOptions = {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: BodyInit | null;
-  timeout?: number;
-  onProgress?: (progress: number) => void;
-  onDownloadProgress?: (progress: number) => void;
-  signal?: AbortSignal;
-  withCredentials?: boolean;
-};
+## 🧠 Tips
 
-```
+* `GET`/`HEAD` methods will ignore `body`
+* Use `params` for safe URL query construction
+* Use `AbortController` to cancel long requests
+* Enable `deduplicate` to auto-abort previous identical request
 
-# 🧪 Example: Aborting a Request
+---
 
-```ts
-const controller = new AbortController();
+## 📚 License
 
-setTimeout(() => controller.abort(), 3000); // abort after 3s
-
-xanfetch({
-  url: '/api/data',
-  signal: controller.signal,
-})
-  .then(res => console.log('Response:', res))
-  .catch(err => {
-    if (err.name === 'AbortError') {
-      console.warn('Request was aborted');
-    } else {
-      console.error('Request failed:', err);
-    }
-  });
-```
-
-
-# 💡 Notes
-- Progress values are emitted as percentage (0 to 100).
-- Aborting a request via AbortController will reject the promise with a DOMException (AbortError).
-- The request will also timeout if it exceeds the specified timeout duration.
+MIT © Naxrul Ahmed
